@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pusat Direktori & Kelola Tautan Web</title>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-color: #1e293b;
+            --border-color: #e2e8f0;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        header h1 {
+            margin: 0 0 10px 0;
+            color: var(--primary-color);
+        }
+        .card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            margin-bottom: 25px;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background-color: var(--primary-hover);
+        }
+        .btn-danger {
+            background-color: #ef4444;
+        }
+        .btn-danger:hover {
+            background-color: #dc2626;
+        }
+        .btn-warning {
+            background-color: #f59e0b;
+        }
+        .btn-warning:hover {
+            background-color: #d97706;
+        }
+        .links-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        .link-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .link-card h3 {
+            margin: 0 0 8px 0;
+            font-size: 18px;
+        }
+        .link-card p {
+            margin: 0 0 12px 0;
+            color: #64748b;
+            font-size: 14px;
+            flex-grow: 1;
+        }
+        .badge {
+            display: inline-block;
+            background: #e0f2fe;
+            color: #0369a1;
+            padding: 3px 8px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            width: fit-content;
+        }
+        .actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .actions a, .actions button {
+            flex: 1;
+            text-align: center;
+            text-decoration: none;
+            padding: 8px;
+            font-size: 13px;
+            border-radius: 6px;
+        }
+        .btn-visit {
+            background-color: #10b981;
+            color: white;
+        }
+        .btn-visit:hover {
+            background-color: #059669;
+        }
+        .search-bar {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Pusat Direktori Web</h1>
+            <p>Kelola, simpan, dan akses semua tautan web buatan Anda dalam satu tempat.</p>
+        </header>
+
+        <!-- Form Tambah / Edit Tautan -->
+        <div class="card">
+            <h3 id="form-title" style="margin-top: 0;">Tambah Tautan Baru</h3>
+            <form id="link-form">
+                <input type="hidden" id="link-index" value="">
+                <div class="form-grid">
+                    <input type="text" id="title" placeholder="Nama Web / Aplikasi" required>
+                    <input type="url" id="url" placeholder="URL (Contoh: https://...)" required>
+                    <input type="text" id="category" placeholder="Kategori (Misal: Admin, Pembelajaran)" required>
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <textarea id="description" placeholder="Deskripsi singkat aplikasi..." rows="2"></textarea>
+                </div>
+                <button type="submit" id="submit-btn">Simpan Tautan</button>
+                <button type="button" id="cancel-btn" style="background-color: #64748b; display: none; margin-left: 10px;" onclick="resetForm()">Batal</button>
+            </form>
+        </div>
+
+        <!-- Kolom Pencarian -->
+        <div class="search-bar">
+            <input type="text" id="search-input" placeholder="Cari nama web atau kategori..." oninput="renderLinks()">
+        </div>
+
+        <!-- Daftar Tautan -->
+        <div id="links-container" class="links-grid">
+            <!-- Kartu Tautan Akan Dimuat di Sini -->
+        </div>
+    </div>
+
+    <script>
+        // Data Awal Bawaan (Dapat disesuaikan atau dihapus)
+        let links = JSON.parse(localStorage.getItem('my_web_links')) || [
+            { title: "Sistem Presensi Absensi Siswa SD", url: "https://sistem-presensi-absensi-siswa-sd.vercel.app", category: "Administrasi", description: "Aplikasi presensi harian siswa sekolah dasar." },
+            { title: "Daftar Pencapaian Literasi PAI", url: "https://script.google.com", category: "Kurikulum", description: "Pencatatan capaian literasi Pendidikan Agama Islam." },
+            { title: "Sistem Perpustakaan SDN 2 Peureulak", url: "https://script.google.com", category: "Fasilitas", description: "Manajemen data perpustakaan sekolah." }
+        ];
+
+        const form = document.getElementById('link-form');
+        const formTitle = document.getElementById('form-title');
+        const submitBtn = document.getElementById('submit-btn');
+        const cancelBtn = document.getElementById('cancel-btn');
+        const linkIndexInput = document.getElementById('link-index');
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const index = linkIndexInput.value;
+            const title = document.getElementById('title').value;
+            const url = document.getElementById('url').value;
+            const category = document.getElementById('category').value;
+            const description = document.getElementById('description').value;
+
+            const linkData = { title, url, category, description };
+
+            if (index === "") {
+                links.push(linkData);
+            } else {
+                links[index] = linkData;
+            }
+
+            saveAndRender();
+            resetForm();
+        });
+
+        function saveAndRender() {
+            localStorage.setItem('my_web_links', JSON.stringify(links));
+            renderLinks();
+        }
+
+        function renderLinks() {
+            const container = document.getElementById('links-container');
+            const keyword = document.getElementById('search-input').value.toLowerCase();
+            container.innerHTML = "";
+
+            const filteredLinks = links.filter(link => 
+                link.title.toLowerCase().includes(keyword) || 
+                link.category.toLowerCase().includes(keyword) ||
+                link.description.toLowerCase().includes(keyword)
+            );
+
+            if (filteredLinks.length === 0) {
+                container.innerHTML = "<p style='grid-column: 1/-1; text-align: center; color: #64748b;'>Tidak ada tautan ditemukan.</p>";
+                return;
+            }
+
+            filteredLinks.forEach((link, originalIndex) => {
+                // Cari index asli dari array utama
+                const realIndex = links.indexOf(link);
+                
+                const card = document.createElement('div');
+                card.className = 'link-card';
+                card.innerHTML = `
+                    <div>
+                        <span class="badge">${link.category}</span>
+                        <h3>${link.title}</h3>
+                        <p>${link.description || 'Tidak ada deskripsi.'}</p>
+                    </div>
+                    <div class="actions">
+                        <a href="${link.url}" target="_blank" class="btn-visit">Buka</a>
+                        <button class="btn-warning" onclick="editLink(${realIndex})">Edit</button>
+                        <button class="btn-danger" onclick="deleteLink(${realIndex})">Hapus</button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function editLink(index) {
+            const link = links[index];
+            linkIndexInput.value = index;
+            document.getElementById('title').value = link.title;
+            document.getElementById('url').value = link.url;
+            document.getElementById('category').value = link.category;
+            document.getElementById('description').value = link.description;
+            
+            formTitle.innerText = "Edit Tautan Web";
+            submitBtn.innerText = "Perbarui Tautan";
+            cancelBtn.style.display = "inline-block";
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function deleteLink(index) {
+            if (confirm("Apakah Anda yakin ingin menghapus tautan ini?")) {
+                links.splice(index, 1);
+                saveAndRender();
+            }
+        }
+
+        function resetForm() {
+            form.reset();
+            linkIndexInput.value = "";
+            formTitle.innerText = "Tambah Tautan Baru";
+            submitBtn.innerText = "Simpan Tautan";
+            cancelBtn.style.display = "none";
+        }
+
+        // Render awal saat halaman dimuat
+        renderLinks();
+    </script>
+</body>
+</html>
