@@ -63,21 +63,11 @@
             font-weight: bold;
             transition: background 0.2s;
         }
-        button:hover {
-            background-color: var(--primary-hover);
-        }
-        .btn-danger {
-            background-color: #ef4444;
-        }
-        .btn-danger:hover {
-            background-color: #dc2626;
-        }
-        .btn-warning {
-            background-color: #f59e0b;
-        }
-        .btn-warning:hover {
-            background-color: #d97706;
-        }
+        button:hover { background-color: var(--primary-hover); }
+        .btn-danger { background-color: #ef4444; }
+        .btn-danger:hover { background-color: #dc2626; }
+        .btn-warning { background-color: #f59e0b; }
+        .btn-warning:hover { background-color: #d97706; }
         .links-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -93,16 +83,8 @@
             justify-content: space-between;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
-        .link-card h3 {
-            margin: 0 0 8px 0;
-            font-size: 18px;
-        }
-        .link-card p {
-            margin: 0 0 12px 0;
-            color: #64748b;
-            font-size: 14px;
-            flex-grow: 1;
-        }
+        .link-card h3 { margin: 0 0 8px 0; font-size: 18px; }
+        .link-card p { margin: 0 0 12px 0; color: #64748b; font-size: 14px; flex-grow: 1; }
         .badge {
             display: inline-block;
             background: #e0f2fe;
@@ -114,36 +96,21 @@
             margin-bottom: 10px;
             width: fit-content;
         }
-        .actions {
-            display: flex;
-            gap: 8px;
-            margin-top: 10px;
-        }
+        .actions { display: flex; gap: 8px; margin-top: 10px; }
         .actions a, .actions button {
-            flex: 1;
-            text-align: center;
-            text-decoration: none;
-            padding: 8px;
-            font-size: 13px;
-            border-radius: 6px;
+            flex: 1; text-align: center; text-decoration: none; padding: 8px; font-size: 13px; border-radius: 6px;
         }
-        .btn-visit {
-            background-color: #10b981;
-            color: white;
-        }
-        .btn-visit:hover {
-            background-color: #059669;
-        }
-        .search-bar {
-            margin-bottom: 20px;
-        }
+        .btn-visit { background-color: #10b981; color: white; }
+        .btn-visit:hover { background-color: #059669; }
+        .search-bar { margin-bottom: 20px; }
+        #loading { text-align: center; color: #64748b; margin-bottom: 20px; font-weight: bold; }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
             <h1>Pusat Direktori Web</h1>
-            <p>Kelola, simpan, dan akses semua tautan web buatan Anda dalam satu tempat.</p>
+            <p>Kelola, simpan, dan akses semua tautan web buatan Anda dalam satu tempat (Sinkron Cloud).</p>
         </header>
 
         <!-- Form Tambah / Edit Tautan -->
@@ -164,24 +131,50 @@
             </form>
         </div>
 
+        <div id="loading">Memuat data dari server Google Sheets...</div>
+
         <!-- Kolom Pencarian -->
         <div class="search-bar">
             <input type="text" id="search-input" placeholder="Cari nama web atau kategori..." oninput="renderLinks()">
         </div>
 
         <!-- Daftar Tautan -->
-        <div id="links-container" class="links-grid">
-            <!-- Kartu Tautan Akan Dimuat di Sini -->
-        </div>
+        <div id="links-container" class="links-grid"></div>
     </div>
 
     <script>
-        // Data Awal Bawaan (Dapat disesuaikan atau dihapus)
-        let links = JSON.parse(localStorage.getItem('my_web_links')) || [
-            { title: "Sistem Presensi Absensi Siswa SD", url: "https://sistem-presensi-absensi-siswa-sd.vercel.app", category: "Administrasi", description: "Aplikasi presensi harian siswa sekolah dasar." },
-            { title: "Daftar Pencapaian Literasi PAI", url: "https://script.google.com", category: "Kurikulum", description: "Pencatatan capaian literasi Pendidikan Agama Islam." },
-            { title: "Sistem Perpustakaan SDN 2 Peureulak", url: "https://script.google.com", category: "Fasilitas", description: "Manajemen data perpustakaan sekolah." }
-        ];
+        // MASUKKAN URL WEB APP GOOGLE APPS SCRIPT ANDA DI SINI
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyxf_nhXnryRxFwqsp0yotwpHoe35DzYsOMlwU39gHUwc8s3wggtHG221zRr2ZeIN_T3A/exec";
+
+        let links = [];
+
+        async function fetchLinks() {
+            try {
+                let response = await fetch(WEB_APP_URL);
+                links = await response.json();
+                document.getElementById('loading').style.display = 'none';
+                renderLinks();
+            } catch (error) {
+                document.getElementById('loading').innerText = "Gagal memuat data dari server. Periksa kembali URL Apps Script.";
+            }
+        }
+
+        async function saveLinksToServer() {
+            document.getElementById('loading').innerText = "Menyimpan perubahan ke server...";
+            document.getElementById('loading').style.display = 'block';
+            try {
+                await fetch(WEB_APP_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(links)
+                });
+                await fetchLinks();
+            } catch (error) {
+                alert("Gagal menyimpan ke server.");
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
 
         const form = document.getElementById('link-form');
         const formTitle = document.getElementById('form-title');
@@ -189,7 +182,7 @@
         const cancelBtn = document.getElementById('cancel-btn');
         const linkIndexInput = document.getElementById('link-index');
 
-        form.addEventListener('submit', function(e) {
+        form.addEventListener('submit', async function(e) {
             e.preventDefault();
             const index = linkIndexInput.value;
             const title = document.getElementById('title').value;
@@ -205,14 +198,9 @@
                 links[index] = linkData;
             }
 
-            saveAndRender();
+            await saveLinksToServer();
             resetForm();
         });
-
-        function saveAndRender() {
-            localStorage.setItem('my_web_links', JSON.stringify(links));
-            renderLinks();
-        }
 
         function renderLinks() {
             const container = document.getElementById('links-container');
@@ -220,9 +208,9 @@
             container.innerHTML = "";
 
             const filteredLinks = links.filter(link => 
-                link.title.toLowerCase().includes(keyword) || 
-                link.category.toLowerCase().includes(keyword) ||
-                link.description.toLowerCase().includes(keyword)
+                (link.title && link.title.toLowerCase().includes(keyword)) || 
+                (link.category && link.category.toLowerCase().includes(keyword)) ||
+                (link.description && link.description.toLowerCase().includes(keyword))
             );
 
             if (filteredLinks.length === 0) {
@@ -230,15 +218,13 @@
                 return;
             }
 
-            filteredLinks.forEach((link, originalIndex) => {
-                // Cari index asli dari array utama
+            filteredLinks.forEach((link) => {
                 const realIndex = links.indexOf(link);
-                
                 const card = document.createElement('div');
                 card.className = 'link-card';
                 card.innerHTML = `
                     <div>
-                        <span class="badge">${link.category}</span>
+                        <span class="badge">${link.category || 'Umum'}</span>
                         <h3>${link.title}</h3>
                         <p>${link.description || 'Tidak ada deskripsi.'}</p>
                     </div>
@@ -266,10 +252,10 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        function deleteLink(index) {
+        async function deleteLink(index) {
             if (confirm("Apakah Anda yakin ingin menghapus tautan ini?")) {
                 links.splice(index, 1);
-                saveAndRender();
+                await saveLinksToServer();
             }
         }
 
@@ -281,8 +267,8 @@
             cancelBtn.style.display = "none";
         }
 
-        // Render awal saat halaman dimuat
-        renderLinks();
+        // Muat data saat halaman dibuka
+        fetchLinks();
     </script>
 </body>
 </html>
